@@ -1,6 +1,8 @@
 BukkitEbean
 ==========
 
+**NOTE:** This is still experimental and won't be 100% until after Spigot 1.12 drops.
+
 For most of its existence, Bukkit bundled the Ebean ORM for use in its plugins. Starting with Spigot 1.12, Ebean will no longer be included by default. So if you have an existing plugin that uses Ebean, or wish to use it in a new one, you're left having to bootstrap database connections entirely on your own instead of having it all done for you.
 
 BukkitEbean is a simple library that you can include as a dependency to have this done for you. With some minor additions to your plugin, it will behave as classic Bukkit always did, using the exact same defaults. Plus, you can change every aspect of the database connection by using the exposed Builder methods.
