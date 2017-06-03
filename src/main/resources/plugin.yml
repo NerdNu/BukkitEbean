@@ -1,5 +1,0 @@
-name: ExampleEbeanPlugin
-version: ${project.version}
-description: Example plugin bootstrapping Ebean with EbeanBuilder
-author: redwall_hp
-main: nu.nerd.BukkitEbean.ExampleEbeanPlugin.ExampleEbeanPlugin
