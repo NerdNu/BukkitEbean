@@ -1,11 +1,11 @@
 package nu.nerd.BukkitEbean;
 
-import com.avaje.ebean.EbeanServer;
-import com.avaje.ebean.EbeanServerFactory;
-import com.avaje.ebean.config.DataSourceConfig;
-import com.avaje.ebean.config.ServerConfig;
-import com.avaje.ebean.config.dbplatform.SQLitePlatform;
-import com.avaje.ebeaninternal.server.lib.sql.TransactionIsolation;
+import io.ebean.Database;
+import io.ebean.DatabaseFactory;
+import io.ebean.Transaction;
+import io.ebean.config.DatabaseConfig;
+import io.ebean.config.dbplatform.sqlite.SQLitePlatform;
+import io.ebean.datasource.DataSourceConfig;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -18,19 +18,19 @@ import java.util.List;
  * Prior to version 1.12 of Spigot, Bukkit bundled Ebean and many plugins use it for persisting data.
  * This library is designed to be easily added to restore this functionality with minimal changes to the plugin.
  */
-public class EbeanBuilder {
+public final class EbeanBuilder {
 
 
     /**
      * The EbeanServer object being built
      */
-    private EbeanServer ebeanServer;
+    private Database ebeanServer;
 
 
     /**
      * The plugin this database is for
      */
-    private JavaPlugin plugin;
+    private final JavaPlugin plugin;
 
 
     /**
@@ -77,6 +77,8 @@ public class EbeanBuilder {
      */
     private int isolationLevel;
 
+	private boolean runDdlGenerate = false;
+
 
     /**
      * Start building an Ebean object using the default SQLite setup Bukkit would for a typical plugin.
@@ -90,8 +92,8 @@ public class EbeanBuilder {
         setDriver("org.sqlite.JDBC");
         setURL("jdbc:sqlite://" + file.getAbsolutePath());
         setCredentials("bukkit", "walrus"); //bukkit defaults
-        setIsolationLevel("SERIALIZABLE");
-        this.classes = new ArrayList<Class<?>>();
+        setIsolationLevel(Transaction.SERIALIZABLE);
+        this.classes = new ArrayList<>();
     }
 
 
@@ -99,10 +101,15 @@ public class EbeanBuilder {
      * Build the EbeanServer object and return it for usage
      * @return Ebean object, ready for usage
      */
-    public EbeanServer build() {
+    public Database build() {
         init();
         return this.ebeanServer;
     }
+
+	public EbeanBuilder setDdlGenerate(boolean runDdlGenerate) {
+		this.runDdlGenerate = runDdlGenerate;
+		return this;
+	}
 
 
     /**
@@ -111,16 +118,21 @@ public class EbeanBuilder {
     private void init() {
 
         // Basic configuration
-        ServerConfig config = new ServerConfig();
+        DatabaseConfig config = new DatabaseConfig();
         config.setDefaultServer(false);
         config.setName(this.name);
         config.setRegister(false);
         config.setClasses(this.classes);
+		if(runDdlGenerate) {
+			System.setProperty("ebean.ddl.generate", "true");
+			System.setProperty("ebean.ddl.run", "true");
+			config.setDdlGenerate(true);
+			config.setDdlRun(true);
+		}
 
         // SQLite-specific handling
         if (this.driver.contains("sqlite")) {
             config.setDatabasePlatform(new SQLitePlatform());
-            config.getDatabasePlatform().getDbDdlSyntax().setIdentity("");
             File file = new File(plugin.getDataFolder(), this.name + ".db");
             file.getParentFile().mkdirs();
         }
@@ -137,7 +149,7 @@ public class EbeanBuilder {
         // Engage!
         ClassLoader previousCL = Thread.currentThread().getContextClassLoader();
         Thread.currentThread().setContextClassLoader(plugin.getClass().getClassLoader());
-        this.ebeanServer = EbeanServerFactory.create(config);
+        this.ebeanServer = DatabaseFactory.create(config);
         Thread.currentThread().setContextClassLoader(previousCL);
 
     }
@@ -192,8 +204,8 @@ public class EbeanBuilder {
      * Set the transaction isolation level. Defaults to "SERIALIZABLE"
      * @param isolationLevel e.g. "SERIALIZABLE"
      */
-    public EbeanBuilder setIsolationLevel(String isolationLevel) {
-        this.isolationLevel = TransactionIsolation.getLevel("SERIALIZABLE");
+    public EbeanBuilder setIsolationLevel(int isolationLevel) {
+        this.isolationLevel = isolationLevel;
         return this;
     }
 

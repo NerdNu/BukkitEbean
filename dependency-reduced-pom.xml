@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>nu.nerd</groupId>
   <artifactId>BukkitEbean</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
   <build>
     <resources>
       <resource>
@@ -69,5 +69,9 @@
       </exclusions>
     </dependency>
   </dependencies>
+  <properties>
+    <maven.compiler.target>17</maven.compiler.target>
+    <maven.compiler.source>17</maven.compiler.source>
+  </properties>
 </project>
 
